@@ -200,11 +200,14 @@ impl FromWorld for WritebackPipelines {
 
         let shader = world.load_asset("embedded://bevy_march/writeback.wgsl");
 
+        // Only create pipelines for supported MSAA sample counts
+        // Most devices support 1, 2, and 4 samples
         let pipelines = [
             get_pipeline(world, layout.clone(), shader.clone(), Msaa::Off),
             get_pipeline(world, layout.clone(), shader.clone(), Msaa::Sample2),
             get_pipeline(world, layout.clone(), shader.clone(), Msaa::Sample4),
-            get_pipeline(world, layout.clone(), shader.clone(), Msaa::Sample8),
+            // Use Sample4 as a fallback for Sample8 to avoid errors
+            get_pipeline(world, layout.clone(), shader.clone(), Msaa::Sample4),
         ];
 
         Self {
