@@ -34,7 +34,11 @@ use settings::SettingsPlugin;
 mod writeback;
 use writeback::WritebackPlugin;
 
-pub trait MarcherMaterial: Asset + ShaderType + WriteInto + std::fmt::Debug + Clone {}
+pub trait MarcherMaterial: Asset + ShaderType + WriteInto + std::fmt::Debug + Clone {
+    fn is_transparent(&self) -> bool {
+        false
+    }
+}
 
 pub struct RayMarcherPlugin<Material: MarcherMaterial> {
     shader: Handle<Shader>,

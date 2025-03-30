@@ -15,6 +15,7 @@ use bevy::{
         render_resource::{
             binding_types::{sampler, texture_2d},
             BindGroup, BindGroupEntries, BindGroupLayout, BindGroupLayoutEntries,
+            BlendState, BlendFactor, BlendOperation, BlendComponent,
             CachedRenderPipelineId, ColorTargetState, ColorWrites, CompareFunction, DepthBiasState,
             DepthStencilState, FilterMode, FragmentState, MultisampleState, PipelineCache,
             PrimitiveState, RenderPassDescriptor, RenderPipelineDescriptor, Sampler,
@@ -257,9 +258,19 @@ fn get_pipeline(
                     shader_defs: vec![ShaderDefVal::Bool("COLOR".into(), true)],
                     entry_point: "fragment".into(),
                     targets: vec![Some(ColorTargetState {
-                        // TODO: Use whatever the view has
                         format: TextureFormat::Rgba16Float,
-                        blend: None,
+                        blend: Some(BlendState {
+                            color: BlendComponent {
+                                src_factor: BlendFactor::SrcAlpha,
+                                dst_factor: BlendFactor::OneMinusSrcAlpha,
+                                operation: BlendOperation::Add,
+                            },
+                            alpha: BlendComponent {
+                                src_factor: BlendFactor::One,
+                                dst_factor: BlendFactor::OneMinusSrcAlpha,
+                                operation: BlendOperation::Add,
+                            },
+                        }),
                         write_mask: ColorWrites::ALL,
                     })],
                 }),
