@@ -32,7 +32,7 @@ fn main() {
     .edit_schedule(Update, make_single_threaded)
     .edit_schedule(PostUpdate, make_single_threaded);
 
-    let main_pass_shader = app.world().resource::<AssetServer>().load("features.wgsl");
+    let main_pass_shader = app.world().resource::<AssetServer>().load("pbr.wgsl");
 
     app.add_plugins(RayMarcherPlugin::<SdfMaterial>::new(main_pass_shader))
         .init_resource::<CursorState>()
@@ -52,8 +52,9 @@ fn main() {
 #[derive(Asset, ShaderType, TypePath, Clone, Debug, Default)]
 struct SdfMaterial {
     base_color: Vec3,
+    metallic: f32,
+    roughness: f32,
     emissive: Vec3,
-    reflective: f32,
 }
 
 impl MarcherMaterial for SdfMaterial {}
@@ -224,8 +225,9 @@ fn setup(
     let center_shape = loader.load("sdfs/features_center.sdf3d");
     let center_material = mats.add(SdfMaterial {
         base_color: LinearRgba::BLACK.to_vec3(),
+        metallic: 0.1,
+        roughness: 0.2,
         emissive: LinearRgba::rgb(0., 1.5, 1.75).to_vec3(),
-        reflective: 0.,
     });
 
     commands.spawn((
@@ -239,8 +241,9 @@ fn setup(
     let surround_shape = loader.load("sdfs/features_surround.sdf3d");
     let surround_material = mats.add(SdfMaterial {
         base_color: LinearRgba::gray(0.7).to_vec3(),
+        metallic: 0.1,
+        roughness: 0.2,
         emissive: LinearRgba::BLACK.to_vec3(),
-        reflective: 0.,
     });
 
     for (pos, scale, speed) in [
@@ -266,8 +269,9 @@ fn setup(
     let floor_shape = loader.load("sdfs/features_floor.sdf3d");
     let water_material = mats.add(SdfMaterial {
         base_color: LinearRgba::rgb(0.5, 1., 0.5).to_vec3(),
+        metallic: 0.8,
+        roughness: 0.2,
         emissive: LinearRgba::BLACK.to_vec3(),
-        reflective: 0.97,
     });
 
     commands.spawn((
