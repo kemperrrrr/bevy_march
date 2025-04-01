@@ -202,18 +202,18 @@ fn calculate_pbr_color(
     let ambient = vec3<f32>(0.03) * albedo * ambient_occlusion;
     
     var color = ambient + Lo + emissive;
-
-    // Tonemapping
-    color = aces_tonemap_optimized(color * 1.5);
-    
-    // Gamma correction
-    color = pow(color, vec3<f32>(1.0 / 2.2));
     
     // Distance fog
     if res.traveled > 50.0 {
         let factor = min((res.traveled - 50.0) / 50.0, 1.0);
         color = mix(color, skybox(march.direction), factor);
     }
+
+     // Tonemapping
+    color = aces_tonemap_optimized(color * 1.5);
+    
+    // Gamma correction
+    color = pow(color, vec3<f32>(1.0 / 2.2));
     
     return color;
 }
