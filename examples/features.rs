@@ -242,6 +242,24 @@ fn setup(
         },
     ));
 
+    let sss_sphere_shape = loader.load("sdfs/pbr_center.sdf3d");
+    let sss_material = mats.add(SdfMaterial {
+        base_color: LinearRgba::rgb(0.9, 0.7, 0.6).to_vec3(), 
+        metallic: 0.0, 
+        roughness: 0.4,
+        emissive: LinearRgba::BLACK.to_vec3(),
+        subsurface_color: LinearRgba::rgb(1.0, 0.4, 0.2).to_vec3(),
+        subsurface_thickness: 0.9
+    });
+
+    commands.spawn((
+        Transform::from_xyz(-3.0, 0.5, -8.0).with_scale(Vec3::splat(1.5)),
+        RenderedSdf {
+            sdf: sss_sphere_shape,
+            material: sss_material,
+        },
+    ));
+
     let surround_shape = loader.load("sdfs/features_surround.sdf3d");
     let surround_material = mats.add(SdfMaterial {
         base_color: LinearRgba::gray(0.7).to_vec3(),

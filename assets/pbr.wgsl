@@ -340,12 +340,12 @@ fn apply_sss(
     L: vec3<f32>
 ) -> vec3<f32> {
     let dotNL = max(dot(N, L), 0.0);
-    let transmittance = exp(-thickness * (1.0 - dotNL));
+    let transmittance = exp(-thickness * (1.0 - dotNL)) * (1.0 - max(dot(N, V), 0.0));
     
-    let sss_intensity = 0.8; 
+    let sss_intensity = 0.8;
     return mix(
         base_color,
-        base_color * (1.0 + subsurface_color * transmittance),
+        base_color * (1.0 + subsurface_color * transmittance * 2.0),
         sss_intensity
     );
 }
