@@ -202,6 +202,12 @@ fn calculate_pbr_color(
     let ambient = vec3<f32>(0.03) * albedo * ambient_occlusion;
     
     var color = ambient + Lo + emissive;
+
+    // Tonemapping
+    color = aces_tonemap_optimized(color * 1.5);
+    
+    // Gamma correction
+    color = pow(color, vec3<f32>(1.0 / 2.2));
     
     // Distance fog
     if res.traveled > 50.0 {
@@ -315,4 +321,34 @@ fn perlinNoise2(P: vec2<f32>) -> f32 {
   let n_x = mix(vec2<f32>(n00, n01), vec2<f32>(n10, n11), vec2<f32>(fade_xy.x));
   let n_xy = mix(n_x.x, n_x.y, fade_xy.y);
   return 2.3 * n_xy;
+}
+
+fn aces_tonemap_optimized(color: vec3<f32>) -> vec3<f32> {
+    let m1 = mat3x3f(
+        0.59719, 0.35458, 0.04823,
+        0.07600, 0.90834, 0.01566,
+        0.02840, 0.13383, 0.83777
+    );
+    
+    let m2 = mat3x3f(
+        1.60475, -0.53108, -0.07367,
+        -0.10208, 1.10813, -0.00605,
+        -0.00327, -0.07276, 1.07602
+    );
+    
+    let v = m1 * color;
+    let a = v * (v + 0.0245786) - 0.000090537;
+    let b = v * (0.983729 * v + 0.4329510) + 0.238081;
+    return clamp(m2 * (a / b), vec3(0.0), vec3(1.0));
+}
+
+fn aces_tonemap(color: vec3<f32>) -> vec3<f32> {
+    let a = 2.51;
+    let b = 0.03;
+    let c = 2.43;
+    let d = 0.59;
+    let e = 0.14;
+    let numerator = color * (a * color + b);
+    let denominator = color * (c * color + d) + e;
+    return clamp(numerator / denominator, vec3(0.0), vec3(1.0));
 }
