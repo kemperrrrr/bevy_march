@@ -55,6 +55,8 @@ struct SdfMaterial {
     metallic: f32,
     roughness: f32,
     emissive: Vec3,
+    subsurface_color: Vec3, 
+    subsurface_thickness: f32
 }
 
 impl MarcherMaterial for SdfMaterial {}
@@ -228,6 +230,8 @@ fn setup(
         metallic: 0.1,
         roughness: 0.2,
         emissive: LinearRgba::rgb(0., 1.5, 1.75).to_vec3(),
+        subsurface_color:LinearRgba::BLACK.to_vec3(),
+        subsurface_thickness: 0.0    
     });
 
     commands.spawn((
@@ -244,6 +248,8 @@ fn setup(
         metallic: 0.1,
         roughness: 0.2,
         emissive: LinearRgba::BLACK.to_vec3(),
+        subsurface_color:LinearRgba::BLACK.to_vec3(),
+        subsurface_thickness: 0.0 
     });
 
     for (pos, scale, speed) in [
@@ -272,6 +278,8 @@ fn setup(
         metallic: 0.8,
         roughness: 0.2,
         emissive: LinearRgba::BLACK.to_vec3(),
+        subsurface_color:LinearRgba::BLACK.to_vec3(),
+        subsurface_thickness: 0.0 
     });
 
     commands.spawn((

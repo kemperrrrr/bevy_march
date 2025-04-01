@@ -8,6 +8,8 @@ struct Material {
     metallic: f32,
     roughness: f32,
     emissive: vec3<f32>,
+    subsurface_color: vec3<f32>,
+    subsurface_thickness: f32,
 }
 
 const PI: f32 = 3.141592653589793;
@@ -76,6 +78,18 @@ fn get_color(march: MarchSettings, res: MarchResult) -> vec3<f32> {
     let roughness = material.roughness;
     let emission = material.emissive;
 
+    if material.subsurface_thickness > 0.0 && metallic < 0.01 {
+        let L = -settings.light_dir;
+        albedo = apply_sss(
+            albedo,
+            material.subsurface_color,
+            material.subsurface_thickness,
+            N,
+            V,
+            L
+        );
+    }
+
     // PBR lighting calculations
     let F0 = mix(vec3<f32>(0.04), albedo, metallic);
     var Lo = vec3<f32>(0.0);
@@ -117,15 +131,16 @@ fn get_color(march: MarchSettings, res: MarchResult) -> vec3<f32> {
         
         if reflection_res.distance < 0.1 {
             let reflection_mat = materials[reflection_res.material];
-            // Включаем эмиссию в расчет цвета отражения
             reflection_color = calculate_pbr_color(
                 reflected,
                 reflection_res,
                 reflection_mat.base_color,
                 reflection_mat.metallic,
                 reflection_mat.roughness,
-                reflection_mat.emissive
-            ) + reflection_mat.emissive; // Добавляем эмиссию дополнительно
+                reflection_mat.emissive,
+                reflection_mat.subsurface_color,  
+                reflection_mat.subsurface_thickness
+            ) + reflection_mat.emissive;
         } else {
             reflection_color = skybox(reflected.direction);
         }
@@ -157,7 +172,9 @@ fn calculate_pbr_color(
     base_color: vec3<f32>,
     metallic: f32,
     roughness: f32,
-    emissive: vec3<f32>
+    emissive: vec3<f32>,
+    subsurface_color: vec3<f32>,  
+    subsurface_thickness: f32
 ) -> vec3<f32> {
     if res.traveled >= settings.far {
         return skybox(march.direction);
@@ -168,6 +185,18 @@ fn calculate_pbr_color(
     let V = -normalize(march.direction);
     
     var albedo = base_color;
+
+    if subsurface_thickness > 0.0 && metallic < 0.01 {
+        let L = -settings.light_dir;
+        albedo = apply_sss(
+            albedo,
+            subsurface_color,
+            subsurface_thickness,
+            N,
+            V,
+            L
+        );
+    }
     
     // PBR lighting calculations
     let F0 = mix(vec3<f32>(0.04), albedo, metallic);
@@ -346,3 +375,23 @@ fn aces_tonemap(color: vec3<f32>) -> vec3<f32> {
     let denominator = color * (c * color + d) + e;
     return clamp(numerator / denominator, vec3(0.0), vec3(1.0));
 }
+
+fn apply_sss(
+    base_color: vec3<f32>,
+    subsurface_color: vec3<f32>,
+    thickness: f32,
+    N: vec3<f32>,
+    V: vec3<f32>,
+    L: vec3<f32>
+) -> vec3<f32> {
+    let dotNL = max(dot(N, L), 0.0);
+    let transmittance = exp(-thickness * (1.0 - dotNL));
+    
+    let sss_intensity = 0.8; 
+    return mix(
+        base_color,
+        base_color * (1.0 + subsurface_color * transmittance),
+        sss_intensity
+    );
+}
+
