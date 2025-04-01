@@ -50,7 +50,9 @@ fn geometrySmith(N: vec3<f32>, V: vec3<f32>, L: vec3<f32>, roughness: f32) -> f3
 }
 
 fn fresnelSchlick(cosTheta: f32, F0: vec3<f32>) -> vec3<f32> {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+    let factor = 1.0 - cosTheta;
+    let factor2 = factor * factor;
+    return F0 + (1.0 - F0) * factor2 * factor2 * factor;
 }
 
 @compute @workgroup_size(8, 8, 1)
