@@ -126,13 +126,6 @@ fn setup(
     let mesh = meshes.add(Cuboid::new(2., 2., 0.01));
     let mat = std_mats.add(StandardMaterial::from(Color::srgb(1., 0.5, 0.5)));
 
-    // Plane 1
-    commands.spawn((
-        Mesh3d(mesh.clone()),
-        MeshMaterial3d(mat.clone()),
-        Transform::from_xyz(0.5, 0., -5.).with_scale(Vec3::splat(2.)),
-    ));
-
     // Plane 2
     commands.spawn((
         Mesh3d(mesh.clone()),
