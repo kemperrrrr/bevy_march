@@ -117,6 +117,7 @@ fn get_color(march: MarchSettings, res: MarchResult) -> vec3<f32> {
         
         if reflection_res.distance < 0.1 {
             let reflection_mat = materials[reflection_res.material];
+            // Включаем эмиссию в расчет цвета отражения
             reflection_color = calculate_pbr_color(
                 reflected,
                 reflection_res,
@@ -124,7 +125,7 @@ fn get_color(march: MarchSettings, res: MarchResult) -> vec3<f32> {
                 reflection_mat.metallic,
                 reflection_mat.roughness,
                 reflection_mat.emissive
-            );
+            ) + reflection_mat.emissive; // Добавляем эмиссию дополнительно
         } else {
             reflection_color = skybox(reflected.direction);
         }
@@ -134,7 +135,7 @@ fn get_color(march: MarchSettings, res: MarchResult) -> vec3<f32> {
     let ambient_occlusion = get_occlusion(hit, N);
     let ambient = vec3<f32>(0.03) * albedo * ambient_occlusion;
     
-    // Combine everything
+    // Combine everything - включаем emission в основной цвет
     var color = ambient + Lo + emission;
     
     // Add reflections (factor depends on Fresnel and roughness)
@@ -187,14 +188,14 @@ fn calculate_pbr_color(
     
     let kS = F;
     var kD = vec3<f32>(1.0) - kS;
-    kD = kD * (1.0 - metallic);
+    kD *= 1.0 - metallic;
     
     let numerator = NDF * G * F;
     let denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + EPSILON;
     let specular = numerator / denominator;
     
     let NdotL = max(dot(N, L), 0.0);
-    Lo = Lo + (kD * albedo / PI + specular) * radiance * NdotL;
+    Lo += (kD * albedo * RECIPROCAL_PI + specular) * radiance * NdotL;
     
     // Ambient lighting with occlusion
     let ambient_occlusion = get_occlusion(hit, N);
