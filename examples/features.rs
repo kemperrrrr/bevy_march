@@ -55,8 +55,11 @@ struct SdfMaterial {
     metallic: f32,
     roughness: f32,
     emissive: Vec3,
-    subsurface_color: Vec3, 
-    subsurface_thickness: f32
+    subsurface_color: Vec3,
+    subsurface_thickness: f32,
+    transparency: f32,         
+    ior: f32,                   
+    absorption: Vec3,           
 }
 
 impl MarcherMaterial for SdfMaterial {}
@@ -231,7 +234,10 @@ fn setup(
         roughness: 0.2,
         emissive: LinearRgba::rgb(0., 1.5, 1.75).to_vec3(),
         subsurface_color:LinearRgba::BLACK.to_vec3(),
-        subsurface_thickness: 0.0    
+        subsurface_thickness: 0.0,
+        transparency: 0.0,
+        ior: 0.0,
+        absorption: LinearRgba::BLACK.to_vec3(),
     });
 
     commands.spawn((
@@ -249,7 +255,10 @@ fn setup(
         roughness: 0.4,
         emissive: LinearRgba::BLACK.to_vec3(),
         subsurface_color: LinearRgba::rgb(1.0, 0.4, 0.2).to_vec3(),
-        subsurface_thickness: 0.9
+        subsurface_thickness: 0.9,
+        transparency: 0.0,
+        ior: 0.0,
+        absorption: LinearRgba::BLACK.to_vec3(),
     });
 
     commands.spawn((
@@ -260,6 +269,27 @@ fn setup(
         },
     ));
 
+    let glass_sphere_shape = loader.load("sdfs/pbr_center.sdf3d");
+    let glass_material = mats.add(SdfMaterial {
+        base_color: LinearRgba::rgb(0.95, 0.95, 1.0).to_vec3(),
+        metallic: 0.0,
+        roughness: 0.05,
+        emissive: LinearRgba::BLACK.to_vec3(),
+        subsurface_color: LinearRgba::BLACK.to_vec3(),
+        subsurface_thickness: 0.0,
+        transparency: 0.9,  
+        ior: 1.5,         
+        absorption: LinearRgba::rgb(0.9, 0.95, 1.0).to_vec3() * 0.1,
+    });
+
+    commands.spawn((
+        Transform::from_xyz(3.0, 0.5, -5.0).with_scale(Vec3::splat(1.2)),
+        RenderedSdf {
+            sdf: glass_sphere_shape,
+            material: glass_material,
+        },
+    ));
+
     let surround_shape = loader.load("sdfs/features_surround.sdf3d");
     let surround_material = mats.add(SdfMaterial {
         base_color: LinearRgba::gray(0.7).to_vec3(),
@@ -267,7 +297,10 @@ fn setup(
         roughness: 0.2,
         emissive: LinearRgba::BLACK.to_vec3(),
         subsurface_color:LinearRgba::BLACK.to_vec3(),
-        subsurface_thickness: 0.0 
+        subsurface_thickness: 0.0,
+        transparency: 0.0,
+        ior: 0.0,
+        absorption: LinearRgba::BLACK.to_vec3(),
     });
 
     for (pos, scale, speed) in [
@@ -297,7 +330,10 @@ fn setup(
         roughness: 0.2,
         emissive: LinearRgba::BLACK.to_vec3(),
         subsurface_color:LinearRgba::BLACK.to_vec3(),
-        subsurface_thickness: 0.0 
+        subsurface_thickness: 0.0 ,
+        transparency: 0.0,
+        ior: 0.0,
+        absorption: LinearRgba::BLACK.to_vec3(),
     });
 
     commands.spawn((

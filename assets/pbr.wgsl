@@ -10,6 +10,9 @@ struct Material {
     emissive: vec3<f32>,
     subsurface_color: vec3<f32>,
     subsurface_thickness: f32,
+    transparency: f32,
+    ior: f32,
+    absorption: vec3<f32>,
 }
 
 const PI: f32 = 3.141592653589793;
@@ -80,6 +83,72 @@ fn get_color(march: MarchSettings, res: MarchResult) -> vec3<f32> {
     let roughness = material.roughness;
     let emission = material.emissive;
 
+    if material.transparency > 0.0 {
+        var refracted = march;
+        refracted.origin = hit;
+        refracted.direction = calculate_refraction(march.direction, N, material.ior);
+        refracted.start = 0.0;
+        refracted.limit = settings.far - res.traveled;
+        refracted.ignored = res.id;
+        let refraction_res = march_ray(refracted);
+        
+        var refraction_color: vec3<f32>;
+        if refraction_res.distance < 0.1 {
+            let refraction_mat = materials[refraction_res.material];
+            refraction_color = calculate_pbr_lighting(
+                refraction_mat.base_color,
+                refraction_mat.metallic,
+                refraction_mat.roughness,
+                refraction_mat.emissive,
+                calc_normal(refraction_res.id, refracted.origin + refracted.direction * (refraction_res.traveled - EPSILON)),
+                -normalize(refracted.direction),
+                -settings.light_dir,
+                refracted.origin + refracted.direction * (refraction_res.traveled - EPSILON),
+                true
+            ) + refraction_mat.emissive;
+        } else {
+            refraction_color = skybox(refracted.direction);
+        };
+        
+        refraction_color = apply_transparency(
+            refraction_color,
+            material.transparency,
+            material.absorption,
+            refraction_res.traveled
+        );
+        
+        var reflected = march;
+        reflected.origin = hit;
+        reflected.direction = reflect(march.direction, N);
+        reflected.start = 0.0;
+        reflected.limit = settings.far - res.traveled;
+        reflected.ignored = res.id;
+        let reflection_res = march_ray(reflected);
+        
+        var reflection_color: vec3<f32>;
+        if reflection_res.distance < 0.1 {
+            let reflection_mat = materials[reflection_res.material];
+            reflection_color = calculate_pbr_lighting(
+                reflection_mat.base_color,
+                reflection_mat.metallic,
+                reflection_mat.roughness,
+                reflection_mat.emissive,
+                calc_normal(reflection_res.id, reflected.origin + reflected.direction * (reflection_res.traveled - EPSILON)),
+                -normalize(reflected.direction),
+                -settings.light_dir,
+                reflected.origin + reflected.direction * (reflection_res.traveled - EPSILON),
+                true
+            ) + reflection_mat.emissive;
+        } else {
+            reflection_color = skybox(reflected.direction);
+        };
+        
+        let F0 = pow((1.0 - material.ior) / (1.0 + material.ior), 2.0);
+        let fresnel = F0 + (1.0 - F0) * pow(1.0 - max(dot(N, V), 0.0), 5.0);
+        
+        return mix(refraction_color, reflection_color, fresnel);
+    }
+    
     if material.subsurface_thickness > 0.0 && metallic < 0.01 {
         let L = -settings.light_dir;
         albedo = apply_sss(
@@ -92,7 +161,6 @@ fn get_color(march: MarchSettings, res: MarchResult) -> vec3<f32> {
         );
     }
 
-    // Main PBR calculations
     var color = calculate_pbr_lighting(
         albedo,
         metallic,
@@ -348,5 +416,31 @@ fn apply_sss(
         base_color * (1.0 + subsurface_color * transmittance * 2.0),
         sss_intensity
     );
+}
+
+fn calculate_refraction(
+    direction: vec3<f32>,
+    normal: vec3<f32>,
+    ior: f32
+) -> vec3<f32> {
+    let eta = 1.0 / ior;
+    let cosi = dot(-direction, normal);
+    let k = 1.0 - eta * eta * (1.0 - cosi * cosi);
+    
+    return select(
+        eta * direction + (eta * cosi - sqrt(k)) * normal,
+        reflect(direction, normal),                      
+        k < 0.0                                          
+    );
+}
+
+fn apply_transparency(
+    base_color: vec3<f32>,
+    transparency: f32,
+    absorption: vec3<f32>,
+    distance: f32
+) -> vec3<f32> {
+    let attenuation = exp(-absorption * distance);
+    return mix(base_color, base_color * attenuation, transparency);
 }
 
