@@ -265,30 +265,7 @@ fn calculate_pbr_lighting(
 }
 
 fn skybox(direction: vec3<f32>) -> vec3<f32> {
-    let sphere_uv = healpix(direction);
-    let cell = floor(sphere_uv * 5.);
-    let uv = (sphere_uv - cell * 0.2) * 5. - 0.5;
-
-    var dist = 999.;
-    for (var i = 0; i < 4; i++) {
-        let relative = vec2<f32>(f32(i) % 2. * 2. - 1., 2. * floor(f32(i) * 0.5) - 1.);
-        let pos = uv - relative * 0.5;
-        let origin = hash2(cell * 2. + relative) - 0.5;
-        let corner_dist = sd_star(pos - origin, 0.03, 4u, 3.);
-        dist = min(dist, corner_dist);
-    }
-
-    let star = -sign(dist) * 2.;
-
-    let noise = perlinNoise2(sphere_uv * 2.);
-
-    let background = vec3<f32>(
-        0.,
-        0.,
-        noise * 0.005,
-    );
-
-    return max(background, vec3<f32>(star));
+    return vec3<f32>(1.0); 
 }
 
 // From https://www.shadertoy.com/view/4sjXW1
