@@ -265,8 +265,21 @@ fn calculate_pbr_lighting(
 }
 
 fn skybox(direction: vec3<f32>) -> vec3<f32> {
-    return vec3<f32>(1.0); 
+    let dir = normalize(direction);
+    
+    let horizon = smoothstep(-0.1, 0.3, dir.y);
+    let sky_color = mix(
+        vec3<f32>(0.4, 0.6, 1.0), 
+        vec3<f32>(0.7, 0.8, 1.0),  
+        horizon
+    );
+    
+    let sun_dir = -settings.light_dir;
+    let sun = smoothstep(0.998, 0.999, dot(dir, sun_dir)) * 10.0;
+    
+    return sky_color + vec3<f32>(sun * 1.0, sun * 0.8, sun * 0.5);
 }
+
 
 // From https://www.shadertoy.com/view/4sjXW1
 fn healpix(p: vec3<f32>) -> vec2<f32> {
