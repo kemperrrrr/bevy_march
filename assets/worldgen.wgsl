@@ -19,6 +19,7 @@ const PI: f32 = 3.141592653589793;
 const RECIPROCAL_PI: f32 = 0.3183098861837907;
 const EPSILON: f32 = 0.0001;
 
+
 // PBR functions
 fn distributionGGX(N: vec3<f32>, H: vec3<f32>, roughness: f32) -> f32 {
     let a = roughness * roughness;
