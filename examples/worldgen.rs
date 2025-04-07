@@ -32,7 +32,7 @@ fn main() {
     .edit_schedule(Update, make_single_threaded)
     .edit_schedule(PostUpdate, make_single_threaded);
 
-    let main_pass_shader = app.world().resource::<AssetServer>().load("tectonic_plates.wgsl");
+    let main_pass_shader = app.world().resource::<AssetServer>().load("worldgen.wgsl");
 
     app.add_plugins(RayMarcherPlugin::<SdfMaterial>::new(main_pass_shader))
         .init_resource::<CursorState>()
